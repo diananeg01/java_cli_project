@@ -1,36 +1,24 @@
 package org.task.cli;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class TaskManager {
-    @SuppressWarnings("unchecked")
     public static void addTask(String description) {
-        JSONArray tasks = TaskStorage.loadTasks();
-        int id = tasks.size() + 1;
-
-        JSONObject newTask = new JSONObject();
-        newTask.put("id", id);
-        newTask.put("description", description);
-        newTask.put("status", "todo");
-        newTask.put("createdAt", LocalDateTime.now().toString());
-        newTask.put("updatedAt", LocalDateTime.now().toString());
-
+        List<Task> tasks = TaskStorage.loadTasks();
+        int nextId = tasks.stream().mapToInt(t -> t.id).max().orElse(0) + 1;
+        Task newTask = new Task(nextId, description);
         tasks.add(newTask);
         TaskStorage.saveTasks(tasks);
-
-        System.out.println("Task added successfully (ID: " + id + ")");
+        System.out.println("Task added successfully (ID: " + nextId + ")");
     }
 
-    @SuppressWarnings("unchecked")
     public static void updateTask(int taskId, String newDescription) {
-        JSONArray tasks = TaskStorage.loadTasks();
+        List<Task> tasks = TaskStorage.loadTasks();
         tasks.forEach(task -> {
-            if (((Task) task).id == taskId) {
-                ((Task) task).description = newDescription;
-                ((Task) task).updatedAt = LocalDateTime.now().toString();
+            if (task.id == taskId) {
+                task.description = newDescription;
+                task.updatedAt = LocalDateTime.now().toString();
                 TaskStorage.saveTasks(tasks);
                 System.out.println("Task updated successfully (ID: " + taskId + ")");
             }
@@ -46,13 +34,12 @@ public class TaskManager {
         changeTaskStatus(taskId, "done");
     }
 
-    @SuppressWarnings("unchecked")
     private static void changeTaskStatus(int taskId, String newStatus) {
-        JSONArray tasks = TaskStorage.loadTasks();
+        List<Task> tasks = TaskStorage.loadTasks();
         tasks.forEach(task -> {
-            if (((Task) task).id == taskId) {
-                ((Task) task).status = newStatus;
-                ((Task) task).updatedAt = LocalDateTime.now().toString();
+            if (task.id == taskId) {
+                task.status = newStatus;
+                task.updatedAt = LocalDateTime.now().toString();
                 TaskStorage.saveTasks(tasks);
                 System.out.println("Task marked as " + newStatus + " (ID: " + taskId + ")");
             }
@@ -60,12 +47,11 @@ public class TaskManager {
         System.out.println("Task not found (ID: " + taskId + ")");
     }
 
-    @SuppressWarnings("unchecked")
     public static void listTasks(String status) {
-        JSONArray tasks = TaskStorage.loadTasks();
+        List<Task> tasks = TaskStorage.loadTasks();
         tasks.forEach(task -> {
-            if (status == null || ((Task) task).status.equals(status)) {
-                System.out.println(((Task) task).id + ". " + ((Task) task).description + " [" + ((Task) task).status + "]");
+            if (status == null || task.status.equals(status)) {
+                System.out.println(task.id + ". " + task.description + " [" + task.status + "]");
             }
         });
     }
